@@ -61,7 +61,7 @@ labels = [
 ]
 
 
-print(bcolors.OKBLUE + f"# BlancoByte ToolKit - System Summary Tool ########" + bcolors.ENDC)
+print(bcolors.OKBLUE + f"# System Summary Tool ########" + bcolors.ENDC)
 
 print(bcolors.OKGREEN + f"# System Summary ##########################"  + bcolors.ENDC)
 
