@@ -1,0 +1,415 @@
+#!/usr/bin/env python3
+# This scripts collect information about Operating System 
+
+# Required packages
+# sudo apt-get install lvm2 pciutils
+# sudo apt-get install psutil
+# pip install pymongo
+
+import subprocess
+import platform
+import os
+import psutil
+
+
+####### Get System Information #######
+
+# For text color
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+# Define a function to run a shell command and capture its output
+def run_command(command):
+    try:
+        result = subprocess.check_output(command, shell=True, text=True)
+        return result.strip()
+    except subprocess.CalledProcessError as e:
+        print(bcolors.FAIL + f"Error running command: {e}" + bcolors.ENDC)
+        return None
+
+# Define the commands to retrieve system information
+commands = [
+    "date",
+    "hostname",
+    "uptime",
+    "uname -s -r -m",
+    "cat /etc/os-release | grep PRETTY_NAME",
+    "getenforce 2>/dev/null || echo 'No SELinux detected'",
+    "systemd-detect-virt 2>/dev/null || echo 'No virtualization detected'"
+]
+
+# Define labels for each section
+labels = [
+    "Date",
+    "Hostname",
+    "Uptime",
+    "Platform",
+    "Release",
+    "Kernel",
+    "Architecture",
+    "Threading",
+    "SELinux",
+    "Virtualized"
+]
+
+
+print(bcolors.OKBLUE + f"# BlancoByte ToolKit - System Summary Tool ########" + bcolors.ENDC)
+
+print(bcolors.OKGREEN + f"# System Summary ##########################"  + bcolors.ENDC)
+
+# Run the commands and store the results
+results = {}
+for label, command in zip(labels, commands):
+    output = run_command(command)
+    if output:
+        results[label] = output
+
+# Determine the maximum label length for alignment
+max_label_length = max(len(label) for label in labels)
+
+# Print the extracted system information in the specified format
+for label, value in results.items():
+    print(f"{label.ljust(max_label_length)} | {value}")
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Get Processor Information #######
+print(bcolors.OKGREEN + f"# Processor ##########################" + bcolors.ENDC)
+
+# Get CPU information using platform
+system_info = platform.uname()
+processor_info = platform.processor()
+
+# Get the number of CPU cores
+try:
+    num_physical_cores = os.cpu_count() // 2  # Divide by 2 to get physical cores
+except NotImplementedError:
+    num_physical_cores = "N/A"
+
+# Check if hyperthreading is enabled
+try:
+    with open('/proc/cpuinfo', 'r') as cpuinfo:
+        hyperthreading = 'ht' in cpuinfo.read().lower()
+except FileNotFoundError:
+    hyperthreading = "N/A"
+
+# Define the width for alignment
+width = max(len(label) for label in ["Processors", "Speeds", "Models", "Caches"])
+
+# Format and print the information
+print(f"Processors{' ' * (width - len('Processors'))} | physical = {num_physical_cores}, cores = {os.cpu_count()}, virtual = {os.cpu_count()}, hyperthreading = {hyperthreading}")
+print(f"Speeds{' ' * (width - len('Speeds'))} |")
+print(f"Models{' ' * (width - len('Models'))} | {processor_info}")
+print(f"Caches{' ' * (width - len('Caches'))} |")
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Get Memory Information #######
+
+print(bcolors.OKGREEN + f"# Memory ##########################" + bcolors.ENDC)
+
+# Function to execute a shell command and return the output
+def run_command(command):
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+    return result.stdout.strip()
+
+# Get memory information
+total_memory = run_command("free -h | awk 'NR==2 {print $2}'")
+free_memory = run_command("free -h | awk 'NR==2 {print $4}'")
+used_memory = run_command("free -h | awk 'NR==2 {print $3}'")
+swap_allocated = run_command("free -h | awk 'NR==4 {print $2}'")
+swap_used = run_command("free -h | awk 'NR==4 {print $3}'")
+
+# Get additional memory details
+shared_memory = run_command("cat /proc/meminfo | grep 'Shmem' | awk '{print $2}'")
+buffers_memory = run_command("cat /proc/meminfo | grep 'Buffers' | awk '{print $2}'")
+caches_memory = run_command("cat /proc/meminfo | grep 'Cached' | awk '{print $2}'")
+dirty_memory = run_command("cat /proc/meminfo | grep 'Dirty' | awk '{print $2}'")
+used_rss_memory = psutil.Process().memory_info().rss / (1024 * 1024)  # Convert to MB
+
+# Define the width for alignment
+width = max(len(label) for label in ["Total", "Free", "Used", "Shared", "Buffers", "Caches", "Dirty", "UsedRSS", "Swappiness"])
+
+# Format and print the memory information
+print(f"Total{' ' * (width - len('Total'))} | {total_memory}")
+print(f"Free{' ' * (width - len('Free'))} | {free_memory}")
+print(f"Used{' ' * (width - len('Used'))} | physical = {used_memory}, swap allocated = {swap_allocated}, swap used = {swap_used}, virtual = {used_memory}")
+print(f"Shared{' ' * (width - len('Shared'))} | {shared_memory} kB")
+print(f"Buffers{' ' * (width - len('Buffers'))} | {buffers_memory} kB")
+print(f"Caches{' ' * (width - len('Caches'))} | {caches_memory} kB")
+print(f"Dirty{' ' * (width - len('Dirty'))} | {dirty_memory} kB")
+print(f"UsedRSS{' ' * (width - len('UsedRSS'))} | {used_rss_memory:.1f} MB")
+
+# Swappiness may vary based on system configuration, you can retrieve it using the sysctl command if available.
+swappiness = run_command("sysctl -n vm.swappiness")
+print(f"Swappiness{' ' * (width - len('Swappiness'))} | {swappiness}")
+
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Get Memory Information #######
+
+print(bcolors.OKGREEN + f"# Mounted Filesystems ##########################" + bcolors.ENDC)
+
+
+# Get the list of mounted partitions
+partitions = psutil.disk_partitions()
+
+# Define the width for alignment
+width = max(len(label) for label in ["Filesystem", "Size", "Used", "Type", "Opts", "Mountpoint"])
+
+# Format and print the header
+print(f"{'Filesystem':<{width}} | {'Size':>{width}} {'Used':>{width}} {'Type':<{width}} {'Opts':<{width}} {'Mountpoint'}")
+
+# Iterate through each partition and print the details
+for partition in partitions:
+    usage = psutil.disk_usage(partition.mountpoint)
+    print(f"{partition.device:<{width}} | {usage.total / 1e9:.1f}G {usage.percent:>{width-6}.0f}% {partition.fstype:<{width}} {partition.opts:<{width}} {partition.mountpoint}")
+
+
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Disk Schedulers And Queue Size #######
+
+# Print with color (assuming bcolors is defined elsewhere in your code)
+print("\033[92m" + f"# Disk Schedulers And Queue Size ##########################" + "\033[0m")
+
+# Run the lsblk command to get block device information (including all devices)
+lsblk_output = subprocess.check_output("lsblk -a --nodeps --output NAME,RQ-SIZE,SCHED", shell=True, text=True)
+
+# Split the output into lines
+lines = lsblk_output.strip().split('\n')[1:]
+
+# Define the width for alignment
+width = max(len(label) for label in ["Block Device", "Scheduler", "Queue Size"])
+
+# Format and print the header
+print(f"{'Block Device':<{width}} | {'Scheduler':<{width}} {'Queue Size':>{width}}")
+
+# Iterate through each line and print the details
+for line in lines:
+    parts = line.split()
+    if len(parts) == 3:
+        device = parts[0]
+        queue_size = parts[1]
+        scheduler = parts[2][1:-1]  # Remove square brackets
+        print(f"{device:<{width}} | {scheduler:<{width}} {queue_size:>{width}}")
+    else:
+        # Handle cases where parts do not have exactly 3 elements
+        device = parts[0]
+        queue_size = parts[1] if len(parts) > 1 else "N/A"
+        scheduler = parts[2][1:-1] if len(parts) > 2 else "N/A"
+        print(f"{device:<{width}} | {scheduler:<{width}} {queue_size:>{width}}")
+
+
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Kernel Inode State #######
+
+print(bcolors.OKGREEN + f"# Disk Partioning ##########################" + bcolors.ENDC)
+
+print(bcolors.OKGREEN + f"# Kernel Inode State ##########################" + bcolors.ENDC)
+
+# Define the list of kernel parameters to retrieve
+kernel_params = [
+    "dentry-state",
+    "file-nr",
+    "inode-nr"
+]
+
+# Define the width for alignment
+width = max(len(label) for label in kernel_params)
+
+# Format and print the header
+print(f"{'Parameter':<{width}} | Value")
+
+# Iterate through each kernel parameter and print the details
+for param in kernel_params:
+    try:
+        value = subprocess.check_output(f"cat /proc/sys/fs/{param}", shell=True, text=True).strip()
+        print(f"{param:<{width}} | {value}")
+    except subprocess.CalledProcessError:
+        print(f"{param:<{width}} | N/A")
+
+
+
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### LVM #######
+
+print(bcolors.OKGREEN + f"# Kernel Inode State ##########################" + bcolors.ENDC)
+
+
+# Function to execute a shell command and return the output, or "Controller not detected" if no output
+def run_command(command):
+    try:
+        result = subprocess.check_output(command, shell=True, text=True).strip()
+        return result
+    except subprocess.CalledProcessError:
+        return "Controller not detected"
+
+# LVM Volumes
+lvm_volumes = run_command("lvdisplay")
+
+# LVM Volume Groups
+lvm_volume_groups = run_command("vgdisplay")
+
+# RAID Controller
+raid_controller = run_command("lspci | grep -i 'RAID controller'")
+
+# Print the collected information
+print("# LVM Volumes ################################################")
+print(lvm_volumes)
+print("# LVM Volume Groups ##########################################")
+print(lvm_volume_groups)
+print("# RAID Controller ############################################")
+print(f"  Controller | {raid_controller}")
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Network Config  #######
+
+print(bcolors.OKGREEN + f"# Network Config ##########################" + bcolors.ENDC)
+
+# Define the network parameters to retrieve
+network_params = [
+    {"name": "net.ipv4.ip_local_port_range", "label": "Port Range"},
+]
+
+# Define the width for alignment
+width = max(len(param["label"]) for param in network_params)
+
+# Iterate through each network parameter and print the details
+for param in network_params:
+    try:
+        value = subprocess.check_output(f"sysctl -n {param['name']}", shell=True, text=True).strip()
+        print(f" {param['label']:<{width}} | {value}")
+    except subprocess.CalledProcessError:
+        print(f" {param['label']:<{width}} | N/A")
+
+
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Interface Statistics  #######
+
+print(bcolors.OKGREEN + f"# Interface Statistics  ##########################" + bcolors.ENDC)
+
+
+# Get a list of network interfaces and their statistics
+network_interfaces = psutil.net_io_counters(pernic=True)
+
+# Define the width for alignment
+width = max(len(label) for label in ["interface", "rx_bytes", "rx_packets", "rx_errors", "tx_bytes", "tx_packets", "tx_errors"])
+
+# Format and print the header
+print(f"{'interface':<{width}} {'rx_bytes':>{width}} {'rx_packets':>{width}} {'rx_errors':>{width}} {'tx_bytes':>{width}} {'tx_packets':>{width}} {'tx_errors':>{width}}")
+print('=' * (width * 7))
+
+# Iterate through each network interface and print the statistics
+for interface, stats in network_interfaces.items():
+    rx_bytes = stats.bytes_recv
+    rx_packets = stats.packets_recv
+    rx_errors = stats.errin
+    tx_bytes = stats.bytes_sent
+    tx_packets = stats.packets_sent
+    tx_errors = stats.errout
+
+    print(f"{interface:<{width}} {rx_bytes:>{width}} {rx_packets:>{width}} {rx_errors:>{width}} {tx_bytes:>{width}} {tx_packets:>{width}} {tx_errors:>{width}}")
+
+
+
+#######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### Network Connections  #######
+
+print(bcolors.OKGREEN + f"# Network Connections  ##########################" + bcolors.ENDC)
+
+
+# Get a list of network connections
+connections = psutil.net_connections(kind='inet')
+
+# Create dictionaries to store the counts of connections by category
+remote_ip_counts = {}
+local_ip_counts = {}
+local_port_counts = {}
+connection_states = {}
+
+# Iterate through each network connection and categorize them
+for conn in connections:
+    # Get the remote IP address, local IP address, local port, and connection status
+    remote_ip = conn.raddr.ip if conn.raddr else 'N/A'
+    local_ip = conn.laddr.ip if conn.laddr else 'N/A'
+    local_port = conn.laddr.port if conn.laddr else 'N/A'
+    state = conn.status
+
+    # Count connections from remote IP addresses
+    if remote_ip != 'N/A':
+        remote_ip_counts[remote_ip] = remote_ip_counts.get(remote_ip, 0) + 1
+
+    # Count connections to local IP addresses
+    if local_ip != 'N/A':
+        local_ip_counts[local_ip] = local_ip_counts.get(local_ip, 0) + 1
+
+    # Count connections to local ports
+    if local_port != 'N/A':
+        local_port_counts[local_port] = local_port_counts.get(local_port, 0) + 1
+
+    # Count connection states
+    connection_states[state] = connection_states.get(state, 0) + 1
+
+# Print the results
+print("Connections from remote IP addresses")
+for ip, count in remote_ip_counts.items():
+    print(f"  {ip}: {count}")
+
+print("\nConnections to local IP addresses")
+for ip, count in local_ip_counts.items():
+    print(f"  {ip}: {count}")
+
+print("\nConnections to top 10 local ports")
+for port, count in sorted(local_port_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
+    print(f"  {port}: {count}")
+
+print("\nStates of connections")
+for state, count in connection_states.items():
+    print(f"  {state}: {count}")
+
+
+######  ####### ##############  ####### ##############  ####### ##############  ####### #######
+
+####### THP Status #######
+
+print(bcolors.OKGREEN + f"# Transparent Huge Pages Status ##########################" + bcolors.ENDC)
+
+
+def check_thp_status():
+    try:
+        with open('/sys/kernel/mm/transparent_hugepage/enabled', 'r') as file:
+            status = file.read().strip()
+        return status
+    except FileNotFoundError:
+        return 'N/A'
+
+thp_status = check_thp_status()
+
+if thp_status == 'always':
+    print("Transparent Huge Pages are enabled.")
+elif thp_status == 'never':
+    print("Transparent Huge Pages are disabled.")
+else:
+    print("Transparent Huge Pages status is unknown or not applicable.")
+
+
+#######  ####### ##############  #######  END ##############  ####### ##############  ####### #######

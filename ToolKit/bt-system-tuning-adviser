@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+import subprocess
+import glob
+
+# Define ANSI color escape codes
+RED = "\033[91m"
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+RESET = "\033[0m"
+
+def check_thp_status():
+    try:
+        with open('/sys/kernel/mm/transparent_hugepage/enabled', 'r') as file:
+            thp_status = file.read().strip()
+            print(f"THP: ", thp_status)
+            if '[never]' in thp_status:
+                return f"{RED}Already Disable{RESET}"
+            elif '[always]' in thp_status:
+                return f"{GREEN}Enable{RESET}"
+            else:
+                return f"{RED}Not Disabled{RESET}"
+    except FileNotFoundError:
+        return f"{RED}Not Disable{RESET}"
+
+def get_swappiness():
+    try:
+        # Run the 'cat' command to read the swappiness setting
+        result = subprocess.check_output(['cat', '/proc/sys/vm/swappiness'], stderr=subprocess.STDOUT, text=True)
+        swappiness = int(result.strip())
+        return swappiness
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None
+
+def get_dirty_ratio():
+    with open('/proc/sys/vm/dirty_ratio', 'r') as file:
+        return int(file.read())
+
+def get_dirty_background_ratio():
+    with open('/proc/sys/vm/dirty_background_ratio', 'r') as file:
+        return int(file.read())
+
+def check_noatime_option_in_fstab():
+    try:
+        with open('/etc/fstab', 'r') as fstab_file:
+            lines = fstab_file.readlines()
+
+        noatime_present = False
+
+        for line in lines:
+            if 'noatime' in line and not line.strip().startswith('#'):
+                noatime_present = True
+                break
+
+        if noatime_present:
+            print("'noatime' option is already present in /etc/fstab")
+        else:
+            print("Suggestion: Include 'noatime' option for mounted drives in /etc/fstab")
+
+    except FileNotFoundError:
+        print("Error: /etc/fstab file not found.")
+
+def get_current_file_descriptors():
+    command = "ulimit -n"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = result.stdout.strip()
+    return int(output)
+
+def get_sysctl_value(sysctl_key, default_value="Not found"):
+    try:
+        with open(f"/proc/sys/{sysctl_key}", "r") as file:
+            value = file.read().strip()
+    except FileNotFoundError:
+        value = default_value
+    return value
+
+def check_and_suggest_kernel_settings():
+    # Define the settings to check and their recommended values
+    settings = {
+        "net.core.somaxconn": 1024,  # Recommended value
+        "net.ipv4.tcp_max_syn_backlog": 4096  # Recommended value
+    }
+
+    # Function to get the current value of a kernel setting
+    def get_current_value(setting):
+        try:
+            result = subprocess.check_output(["sysctl", setting], stderr=subprocess.STDOUT)
+            # Extracting the value
+            return int(result.decode().split("=")[1].strip())
+        except subprocess.CalledProcessError as e:
+            print(f"Error reading {setting}: {e.output.decode()}")
+            return None
+
+    # Check each setting and provide suggestions
+    for setting, recommended_value in settings.items():
+        current_value = get_current_value(setting)
+        if current_value is not None:
+            print(f"Current value of {setting}: {current_value}")
+            if current_value < recommended_value:
+                print(f"Suggestion: Increase {setting} to {recommended_value} for better performance.")
+            else:
+                print(f"No action needed: {setting} is already set to an optimal value or higher.")
+        else:
+            print(f"Unable to read the value of {setting}.")
+
+def check_io_scheduler(device):
+    command = f"cat /sys/block/{device}/queue/scheduler"
+    result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output_value = result.stdout.strip()
+    #print(result)
+   # print(output_value)
+    if "[" in output_value and "]" in output_value:
+        scheduler = output_value.split("[")[1].split("]")[0]
+    else:
+        scheduler = output_value
+    return scheduler,output_value
+
+def check_overcommit_setting():
+    # Path to the overcommit_memory setting
+    overcommit_file = '/proc/sys/vm/overcommit_memory'
+
+    try:
+        # Read the current overcommit_memory value
+        with open(overcommit_file, 'r') as file:
+            overcommit_value = file.read().strip()
+
+        print(f"Current overcommit_memory value: {overcommit_value}")
+
+        # Check if the value is 0 or 1
+        if overcommit_value in ['0', '1']:
+            print("Overcommit memory setting is correctly configured (0 or 1).")
+        else:
+            print("Suggestion: Set overcommit_memory to 0 or 1. It's currently set to an unexpected value.")
+            print("Run 'echo 0 | sudo tee /proc/sys/vm/overcommit_memory' to set it to 0.")
+
+    except IOError as e:
+        print(f"Error reading {overcommit_file}: {e}")
+
+def check_cpu_scaling_governor():
+    # Path pattern for the scaling governor files
+    governor_files = glob.glob('/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor')
+
+    if not governor_files:
+        print("No scaling governor files found. CPU frequency scaling may not be supported or enabled.")
+        return
+
+    # Check the current scaling governor for each CPU
+    for file in governor_files:
+        try:
+            with open(file, 'r') as f:
+                governor = f.read().strip()
+            print(f"{file}: {governor}")
+        except IOError as e:
+            print(f"Error reading {file}: {e}")
+
+    # Suggest setting to 'performance' if not already set
+    if all(governor == 'performance' for governor in governor_files):
+        print("All CPUs are already using the 'performance' governor.")
+    else:
+        print("Suggestion: Set the scaling governor to 'performance' for all CPUs for better performance under high demand.")
+
+thp_status = check_thp_status()
+swappiness = get_swappiness()
+dirty_ratio = get_dirty_ratio()
+dirty_background_ratio = get_dirty_background_ratio()
+current_file_descriptors = get_current_file_descriptors()
+
+lsblk_command = ["lsblk", "--nodeps", "-o", "NAME"]
+lsblk_output = subprocess.run(lsblk_command, capture_output=True, text=True)
+device_name = lsblk_output.stdout.strip().split("\n")[-1].split()[0]
+
+current_scheduler,output_value = check_io_scheduler(device_name)
+
+variables = [
+    "net/ipv4/tcp_window_scaling",
+    "net/ipv4/tcp_sack",
+    "net/ipv4/tcp_timestamps",
+    "net/ipv4/tcp_fin_timeout",
+    "net/ipv4/tcp_tw_reuse",
+    "net/ipv4/tcp_tw_recycle"
+]
+
+print(f"{CYAN}THP status:{RESET}", thp_status)
+print("It is recommended to disable THP for MongoDB")
+print(f"{CYAN}Current Transparent Huge Pages (THP) status:{RESET}", thp_status)
+
+print("************************************************************************")
+
+print(f"Suggestion : Reduce Swappiness: Set the swappiness value to a lower number (like 10) to avoid using swap space excessively. Use sudo sysctl vm.swappiness=10 and follow document to make changes persistent after reboot.")
+if swappiness is not None:
+    print(f"{CYAN}Current Swappiness setting: {RESET}" ,swappiness)
+else:
+    print("Failed to retrieve swappiness setting.")
+
+print("************************************************************************")
+
+print(f"{CYAN}Dirty Ratio:{RESET}", dirty_ratio)
+print(f"{CYAN}Dirty Background Ratio:{RESET}", dirty_background_ratio)
+print("The default values may not be suitable for MongoDB's write-heavy workload, so it is recommended to increase them.")
+
+print("************************************************************************")
+
+print(f"{CYAN}Disable 'atime' Updates:{RESET}")
+print("noatime option for mounted drives to reduce unnecessary write operations")
+check_noatime_option_in_fstab()
+
+print("************************************************************************")
+
+print(f"{CYAN}Current File Descriptors:{RESET}", current_file_descriptors)
+print("Default maximum number of open file descriptors in Linux may not be sufficient for MongoDB, which performs a large number of disk I/O operations.")
+print("To increase  open file descriptors in Linux - Edit /etc/security/limits.conf , follow official linux document for applying change.") 
+
+print("************************************************************************")
+
+for variable in variables:
+    value = get_sysctl_value(variable)
+    print(f"{CYAN}{variable} = {RESET}", value)
+
+print("MongoDB is a network-intensive application, and tuning TCP parameters can improve its performance")
+print("************************************************************************")
+print(f"{CYAN}Linux kernel parameter settings: {RESET} ")
+
+check_and_suggest_kernel_settings()
+
+print("************************************************************************")
+
+print(f"{CYAN}The current I/O scheduler for {device_name} is:{RESET}", output_value)
+print(f"{CYAN}The current I/O scheduler for {device_name} is:{RESET}", current_scheduler)
+print("It is recommended to use the 'noop' or 'deadline' IO scheduler for MongoDB.")
+
+print("************************************************************************")
+print(f"{CYAN}Overcommit Setting :{RESET}")
+# Run the function
+
+check_overcommit_setting()
+
+print("************************************************************************")
+print(f"{CYAN}CPU Scaling Governor :{RESET}")
+# Run the function
+
+check_cpu_scaling_governor()
+
