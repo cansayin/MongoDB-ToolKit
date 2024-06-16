@@ -22,7 +22,7 @@ def is_prefix(index1, index2):
 
 def check_duplicated_indexes(db, collection):
     indexes = fetch_indexes(collection)
-    to_drop = set()
+    duplicates = []
     index_names = list(indexes.keys())
 
     for i in range(len(index_names)):
@@ -30,11 +30,11 @@ def check_duplicated_indexes(db, collection):
             idx1 = indexes[index_names[i]]['key']
             idx2 = indexes[index_names[j]]['key']
             if is_prefix(idx1, idx2):
-                to_drop.add(index_names[i])
+                duplicates.append((index_names[i], index_names[j]))
             elif is_prefix(idx2, idx1):
-                to_drop.add(index_names[j])
+                duplicates.append((index_names[j], index_names[i]))
 
-    return list(to_drop)
+    return duplicates
 
 def check_unused_indexes(db, collection):
     try:
@@ -86,13 +86,14 @@ def main(args):
             if args.check_duplicated or args.check_all:
                 duplicates = check_duplicated_indexes(db, collection)
                 if duplicates:
-                    print(f"{result_count}- In database '{db_name}', collection '{col_name}', drop indexes: {duplicates}")
-                    result_count += 1
+                    for dup in duplicates:
+                        print(f"{result_count}- In database '{db_name}', collection '{col_name}', index '{dup[0]}' is a duplicate of '{dup[1]}'. You can delete '{dup[0]}'.")
+                        result_count += 1
 
             if args.check_unused or args.check_all:
                 unused = check_unused_indexes(db, collection)
                 if unused:
-                    print(f"{result_count}- In database '{db_name}', collection '{col_name}', unused indexes: {unused}")
+                    print(f"{result_count}- In database '{db_name}', collection '{col_name}', unused indexes: {unused}. You can delete these.")
                     result_count += 1
 
 if __name__ == '__main__':
