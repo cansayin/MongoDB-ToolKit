@@ -250,7 +250,6 @@ Killed operation rs-shard-01:172863
 Killed operation rs-shard-01:172945
 Killed operation rs-shard-01:172864
 
-Total number of results returned: 3 ####
 
 ```
 ```
