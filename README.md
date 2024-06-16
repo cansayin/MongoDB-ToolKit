@@ -707,3 +707,43 @@ No scaling governor files found. CPU frequency scaling may not be supported or e
 
 
 ```
+
+-----
+## bt-mongodb-cpu-and-mem-killer-processess
+
+This script allows you detect cpu and mem killer processess.
+
+
+### Usage
+```
+python3 bt-mongodb-cpu-and-mem-killer-processess.py --help
+
+usage: test [-h] [--host HOST] [--port PORT] [--user USER] [--password PASSWORD] [--check {mem,cpu}] [--check-both] [--order-by {asc,desc}] [--limit LIMIT] [--all-databases]
+            [--ignore-databases [IGNORE_DATABASES [IGNORE_DATABASES ...]]]
+
+Check MongoDB running operations consuming most CPU and RAM.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --host HOST           MongoDB host (default: localhost)
+  --port PORT           MongoDB port (default: 27017)
+  --user USER           MongoDB user (default: None)
+  --password PASSWORD   MongoDB password (default: None)
+  --check {mem,cpu}     Check memory or CPU usage
+  --check-both          Check both memory and CPU usage
+  --order-by {asc,desc}
+                        Order results by ascending or descending secs_running (default: descending)
+  --limit LIMIT         Limit the number of results
+  --all-databases       Include operations from all databases
+  --ignore-databases [IGNORE_DATABASES [IGNORE_DATABASES ...]]
+                        Databases to ignore when using --all-databases 
+
+```
+#### Example
+```
+python3 test --check-both --all-databases --limit 2 --order-by desc
+{'type': 'op', 'host': '4ef314225763:27017', 'desc': 'conn544', 'connectionId': 544, 'client': '172.18.0.8:54054', 'appName': 'OplogFetcher', 'clientMetadata': {'application': {'name': 'OplogFetcher'}, 'driver': {'name': 'MongoDB Internal Client', 'version': '6.0.1'}, 'os': {'type': 'Linux', 'name': 'Ubuntu', 'architecture': 'aarch64', 'version': '20.04'}}, 'active': True, 'currentOpTime': '2024-06-16T20:08:48.871+00:00', 'threaded': True, 'opid': 194705, 'secs_running': 3, 'microsecs_running': 3663326, 'op': 'getmore', 'ns': 'local.oplog.rs', 'command': {'getMore': 1982380187062395607, 'collection': 'oplog.rs', 'batchSize': 13981010, 'maxTimeMS': 5000, 'term': 13, 'lastKnownCommittedOpTime': {'ts': Timestamp(1718562458, 1), 't': 12}, '$db': 'local', '$replData': 1, '$oplogQueryData': 1, '$readPreference': {'mode': 'secondaryPreferred'}, '$clusterTime': {'clusterTime': Timestamp(1718562622, 2), 'signature': {'hash': b'\xb6\xbd31\xc0\xe6\x08\xed\x96m\x7f\x0ew\xc6\xa1\x00\xd9\x99G\xb8', 'keyId': 7379686634180050968}}, '$configTime': Timestamp(1718562622, 1), '$topologyTime': Timestamp(1718217211, 6)}, 'planSummary': 'COLLSCAN', 'cursor': {'cursorId': 1982380187062395607, 'createdDate': datetime.datetime(2024, 6, 16, 18, 30, 23, 341000), 'lastAccessDate': datetime.datetime(2024, 6, 16, 20, 8, 45, 207000), 'nDocsReturned': 373, 'nBatchesReturned': 1132, 'noCursorTimeout': False, 'tailable': True, 'awaitData': True, 'originatingCommand': {'find': 'oplog.rs', 'filter': {'ts': {'$gte': Timestamp(1718562612, 1)}}, 'batchSize': 13981010, 'tailable': True, 'awaitData': True, 'term': 13, 'maxTimeMS': 60000, 'readConcern': {'level': 'local', 'afterClusterTime': Timestamp(0, 1)}, '$db': 'local', '$replData': 1, '$oplogQueryData': 1, '$readPreference': {'mode': 'secondaryPreferred'}, '$clusterTime': {'clusterTime': Timestamp(1718562622, 2), 'signature': {'hash': b'\xb6\xbd31\xc0\xe6\x08\xed\x96m\x7f\x0ew\xc6\xa1\x00\xd9\x99G\xb8', 'keyId': 7379686634180050968}}, '$configTime': Timestamp(1718562622, 1), '$topologyTime': Timestamp(1718217211, 6)}, 'operationUsingCursorId': 194705, 'lastKnownCommittedOpTime': {'ts': Timestamp(1718568525, 1), 't': 13}}, 'numYields': 2, 'locks': {}, 'waitingForLock': False, 'lockStats': {'FeatureCompatibilityVersion': {'acquireCount': {'r': 2}}, 'Global': {'acquireCount': {'r': 2}}, 'Mutex': {'acquireCount': {'r': 1}}}, 'waitingForFlowControl': False, 'flowControlStats': {}}
+...
+...
+
+```
