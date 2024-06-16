@@ -131,10 +131,10 @@ optional arguments:
 ```
 python3 bt-mongodb-index-profiler --check-all --all-databases --all-collections
 
-In database 'MyDatabase', collection 'MyCollection', unused indexes: ['_id_', 'oemNumber_hashed_zipCode_1_supplierId_1', 'idx_01', 'idx_02', '_id_', 'oemNumber_hashed_zipCode_1_supplierId_1', 'oemNumber_hashed_zipCode_1_supplierId_1', '_id_']
-In database 'MyDatabase', collection 'products', unused indexes: ['_id_']
-In database 'testdb', collection 'test_col', drop indexes: ['idx_02']
-In database 'testdb', collection 'test_col', unused indexes: ['_id_', 'idx_01', 'idx_02']
+1- In database 'MyDatabase', collection 'MyCollection', unused indexes: ['_id_', 'oemNumber_hashed_zipCode_1_supplierId_1', '_id_', 'oemNumber_hashed_zipCode_1_supplierId_1', '_id_', 'oemNumber_hashed_zipCode_1_supplierId_1', 'idx_01', 'idx_02']
+2- In database 'MyDatabase', collection 'products', unused indexes: ['_id_']
+3- In database 'testdb', collection 'test_col', drop indexes: ['idx_02']
+4- In database 'testdb', collection 'test_col', unused indexes: ['_id_', 'idx_02', 'idx_01']
 ```
 
 
