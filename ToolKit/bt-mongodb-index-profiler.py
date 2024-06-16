@@ -66,6 +66,8 @@ def main(args):
         print("No databases specified. Use --all-databases or --databases to specify databases.")
         return
 
+    result_count = 1
+
     for db_name in databases:
         db = client[db_name]
         collections = []
@@ -84,12 +86,14 @@ def main(args):
             if args.check_duplicated or args.check_all:
                 duplicates = check_duplicated_indexes(db, collection)
                 if duplicates:
-                    print(f"In database '{db_name}', collection '{col_name}', drop indexes: {duplicates}")
+                    print(f"{result_count}- In database '{db_name}', collection '{col_name}', drop indexes: {duplicates}")
+                    result_count += 1
 
             if args.check_unused or args.check_all:
                 unused = check_unused_indexes(db, collection)
                 if unused:
-                    print(f"In database '{db_name}', collection '{col_name}', unused indexes: {unused}")
+                    print(f"{result_count}- In database '{db_name}', collection '{col_name}', unused indexes: {unused}")
+                    result_count += 1
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check for duplicated and unused indexes in MongoDB.')
