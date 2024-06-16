@@ -46,9 +46,11 @@ def main():
     if args.action == 'print':
         for op in long_running_ops:
             print(op)
+        print(f"Total number of printed operations: {len(long_running_ops)}")
     elif args.action == 'kill':
         for op in long_running_ops:
             kill_operation(client, op['opid'])
+        print(f"Total number of killed operations: {len(long_running_ops)}")
 
 if __name__ == '__main__':
     main()
