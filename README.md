@@ -313,15 +313,15 @@ python3 bt-mongodb-query-profiler --log_level debug --limit 2 --database testdb 
 
 ----
 
-## bt-mongodb-sharded-diskSize-printer & bt-mongodb-replciated-diskSize-printer
+## bt-mongodb-sharded-size-printer & bt-mongodb-replciated-size-printer
 
 This script allows you to check total Disk and Document sizes on both Sharded & Replicated clusters.
 
 ### Usage
 ```
-python3 bt-mongodb-sharded-diskSize-printer --help
+python3 bt-mongodb-sharded-size-printer --help
 
-usage: bt-mongodb-sharded-diskSize-printer [-h] [--user USER] [--password PASSWORD] [--host HOST] [--port PORT]
+usage: bt-mongodb-sharded-size-printer [-h] [--user USER] [--password PASSWORD] [--host HOST] [--port PORT]
 
 Connect to MongoDB and list databases and collection sizes.
 
@@ -336,36 +336,56 @@ optional arguments:
 ```
 #### Example
 ```
-python3 bt-mongodb-sharded-diskSize-printer
+python3 bt-mongodb-sharded-size-printer
 
 Database: MyDatabase
-  Collection: system.profile, Size: 27 documents, Storage Size: 50563 bytes
-  Collection: MyCollection, Size: 2 documents, Storage Size: 74 bytes
-  Collection: products, Size: 1 documents, Storage Size: 37 bytes
++----------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+|   Collection   | Documents | Storage Size (bytes) | Indexes | Index Size (bytes) | Total Data Size | Total Index Size | Avg Obj Size |
++----------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+| system.profile |     27    |        50563         |    0    |         0          |      45056      |        0         |    1872.0    |
+|  MyCollection  |     2     |          74          |    4    |       65536        |      28672      |      65536       |     37.0     |
+|    products    |     1     |          37          |    1    |       20480        |      20480      |      20480       |     37.0     |
++----------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
 Database: admin
-  Collection: system.version, Size: 1 documents, Storage Size: 59 bytes
-  Collection: system.keys, Size: 2 documents, Storage Size: 170 bytes
++----------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+|   Collection   | Documents | Storage Size (bytes) | Indexes | Index Size (bytes) | Total Data Size | Total Index Size | Avg Obj Size |
++----------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+| system.version |     1     |          59          |    1    |       20480        |      20480      |      20480       |     59.0     |
+|  system.keys   |     2     |         170          |    1    |       20480        |      20480      |      20480       |     85.0     |
++----------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
 Database: config
-  Collection: shards, Size: 3 documents, Storage Size: 387 bytes
-  Collection: mongos, Size: 2 documents, Storage Size: 268 bytes
-  Collection: databases, Size: 3 documents, Storage Size: 401 bytes
-  Collection: changelog, Size: 3759 documents, Storage Size: 1830442 bytes
-  Collection: transactions, Size: 0 documents, Storage Size: 0 bytes
-  Collection: system.indexBuilds, Size: 0 documents, Storage Size: 0 bytes
-  Collection: image_collection, Size: 0 documents, Storage Size: 0 bytes
-  Collection: tags, Size: 0 documents, Storage Size: 0 bytes
-  Collection: locks, Size: 4 documents, Storage Size: 768 bytes
-  Collection: reshardingOperations, Size: 0 documents, Storage Size: 0 bytes
-  Collection: system.preimages, Size: 0 documents, Storage Size: 0 bytes
-  Collection: lockpings, Size: 4 documents, Storage Size: 155 bytes
-  Collection: actionlog, Size: 682 documents, Storage Size: 201190 bytes
-  Collection: collections, Size: 2 documents, Storage Size: 441 bytes
-  Collection: version, Size: 1 documents, Storage Size: 83 bytes
-  Collection: chunks, Size: 1030 documents, Storage Size: 286086 bytes
-  Collection: migrations, Size: 0 documents, Storage Size: 0 bytes
++----------------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+|      Collection      | Documents | Storage Size (bytes) | Indexes | Index Size (bytes) | Total Data Size | Total Index Size | Avg Obj Size |
++----------------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+|        shards        |     3     |         387          |    2    |       40960        |      20480      |      40960       |    129.0     |
+|        mongos        |     2     |         268          |    1    |       20480        |      36864      |      20480       |    134.0     |
+|      databases       |     3     |         401          |    1    |       36864        |      36864      |      36864       |    133.0     |
+|      changelog       |    3759   |       1830442        |    1    |       356352       |      532480     |      356352      |    486.0     |
+|     transactions     |     0     |          0           |    2    |       16384        |      24576      |      16384       |     0.0      |
+|  system.indexBuilds  |     0     |          0           |    1    |        4096        |       4096      |       4096       |     0.0      |
+|   image_collection   |     0     |          0           |    1    |        4096        |       4096      |       4096       |     0.0      |
+|         tags         |     0     |          0           |    3    |       12288        |       4096      |      12288       |     0.0      |
+|        locks         |     4     |         768          |    3    |       110592       |      36864      |      110592      |    192.0     |
+| reshardingOperations |     0     |          0           |    2    |        8192        |       4096      |       8192       |     0.0      |
+|   system.preimages   |     0     |          0           |    0    |         0          |       4096      |        0         |     0.0      |
+|      lockpings       |     4     |         155          |    2    |       57344        |      36864      |      57344       |     38.0     |
+|      actionlog       |    682    |        201190        |    1    |       106496       |      106496     |      106496      |    295.0     |
+|     collections      |     2     |         441          |    1    |       36864        |      36864      |      36864       |    220.0     |
+|       version        |     1     |          83          |    1    |       20480        |      20480      |      20480       |     83.0     |
+|        chunks        |    1030   |        286086        |    4    |       438272       |      126976     |      438272      |    277.0     |
+|      migrations      |     0     |          0           |    2    |        8192        |       4096      |       8192       |     0.0      |
++----------------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
 Database: testdb
-  Collection: test_col, Size: 0 documents, Storage Size: 0 bytes
-
++------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+| Collection | Documents | Storage Size (bytes) | Indexes | Index Size (bytes) | Total Data Size | Total Index Size | Avg Obj Size |
++------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+|  test_col  |     0     |          0           |    3    |       12288        |       4096      |      12288       |     0.0      |
++------------+-----------+----------------------+---------+--------------------+-----------------+------------------+--------------+
+Total Documents: 5523
+Total Data Size: 1.1 MiB
+Total Index Size: 1.4 MiB
+RAM Headroom: 2.3 KiB
+RAM Used: 59 Bytes (2.4%)
 ```
 
 
