@@ -249,13 +249,20 @@ Killed operation rs-shard-01:172861
 Killed operation rs-shard-01:172863
 Killed operation rs-shard-01:172945
 Killed operation rs-shard-01:172864
+...
+...
 
+Total number of killed operations: 6
 
 ```
 ```
 python3 bt-mongodb-kill-processes --busy-time 2 --action print --all-databases --ignore-databases admin,config,testdb
 
 {'shard': 'rs-shard-03', 'type': 'op', 'host': '96125cbd04b9:27017', 'desc': 'conn39', 'connectionId': 39, 'client_s': '172.18.0.2:56968', 'clientMetadata': {'driver': {'name': 'NetworkInterfaceTL-ReplicaSetMonitor-TaskExecutor', 'version': '6.0.1'}, 'os': {'type': 'Linux', 'name': 'Ubuntu', 'architecture': 'aarch64', 'version': '20.04'}}, 'active': True, 'currentOpTime': '2024-06-15T20:49:23.229+00:00', 'threaded': True, 'opid': 'rs-shard-03:173615', 'secs_running': 2, 'microsecs_running': 2779967, 'op': 'command', 'ns': 'admin.$cmd', 'command': {'isMaster': 1, 'maxAwaitTimeMS': 10000, 'topologyVersion': {'processId': ObjectId('666ddc296f28ec37c0063331'), 'counter': 6}, 'internalClient': {'minWireVersion': 17, 'maxWireVersion': 17}, 'maxTimeMSOpOnly': 20000, '$db': 'admin'}, 'numYields': 0, 'waitingForLatch': {'timestamp': datetime.datetime(2024, 6, 15, 20, 49, 20, 554000), 'captureName': 'AnonymousLockable'}, 'locks': {}, 'waitingForLock': False, 'lockStats': {}, 'waitingForFlowControl': False, 'flowControlStats': {}}
+...
+...
+
+Total number of printed operations: 13
 
 ```
 
