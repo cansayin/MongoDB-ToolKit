@@ -735,8 +735,8 @@ optional arguments:
                         Order results by ascending or descending secs_running (default: descending)
   --limit LIMIT         Limit the number of results
   --all-databases       Include operations from all databases
-  --ignore-databases [IGNORE_DATABASES [IGNORE_DATABASES ...]]
-                        Databases to ignore when using --all-databases 
+  --ignore-databases    Databases to ignore when using --all-databases 
+                        
 
 ```
 #### Example
