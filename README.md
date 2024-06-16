@@ -3,6 +3,10 @@ MongoDB ToolKit for Monitoring &amp; Troubleshooting
 
 Welcome to the MongoDB ToolKit, a comprehensive suite of Python scripts designed to help you monitor and troubleshoot your MongoDB clusters effectively. This toolkit includes various scripts tailored for different aspects of MongoDB management, from sharded and replicated cluster summaries to index profiling, heartbeat monitoring and more.
 
+Required Packages
+- Some scripts may require, humanize, psutil, tabulate or prettytable.
+- If you receive error due to this enable to find these packages please install them.
+
 ## bt-mongodb-sharded-summary & bt-mongodb-replicated-summary
 
 This script connects to a MongoDB replica set and retrieves detailed information about the cluster. It provides insights into the replica set members, security settings, oplog details, and cluster-wide statistics.
