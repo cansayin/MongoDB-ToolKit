@@ -174,31 +174,31 @@ optional arguments:
 ```
 python3 bt-mongodb-index-usage --database testdb --collection test_col
 
-Running index stats for testdb.test_col ####
-{'accesses': {'ops': 0,
-              'since': datetime.datetime(2024, 6, 15, 18, 23, 38, 706000)},
- 'host': '96125cbd04b9:27017',
- 'key': {'_id': 1},
- 'name': '_id_',
- 'spec': {'key': {'_id': 1}, 'name': '_id_', 'v': 2}}
- 
-{'accesses': {'ops': 0,
-              'since': datetime.datetime(2024, 6, 15, 18, 23, 38, 706000)},
- 'host': '96125cbd04b9:27017',
- 'key': {'f1': 1, 'f2': -1, 'f3': 1, 'f4': 1},
- 'name': 'idx_01',
- 'spec': {'key': {'f1': 1, 'f2': -1, 'f3': 1, 'f4': 1},
-          'name': 'idx_01',
-          'v': 2}}
- 
-{'accesses': {'ops': 0,
-              'since': datetime.datetime(2024, 6, 15, 18, 23, 38, 706000)},
- 'host': '96125cbd04b9:27017',
- 'key': {'f1': 1, 'f2': -1, 'f3': 1},
- 'name': 'idx_02',
- 'spec': {'key': {'f1': 1, 'f2': -1, 'f3': 1}, 'name': 'idx_02', 'v': 2}}
- 
-Total number of results returned: 3 ####
+name: _id_
+key: {'_id': 1}
+host: 4ef314225763:27017
+ops: 0
+since: 2024-06-16 14:25:56.935000
+shard: rs-shard-01
+spec: {'v': 2, 'key': {'_id': 1}, 'name': '_id_'}
+
+name: oemNumber_hashed_zipCode_1_supplierId_1
+key: {'oemNumber': 'hashed', 'zipCode': 1, 'supplierId': 1}
+host: 4ef314225763:27017
+ops: 0
+since: 2024-06-16 14:25:56.935000
+shard: rs-shard-01
+spec: {'v': 2, 'key': {'oemNumber': 'hashed', 'zipCode': 1, 'supplierId': 1}, 'name': 'oemNumber_hashed_zipCode_1_supplierId_1'}
+
+name: idx_01
+key: {'f1': 1, 'f2': -1, 'f3': 1, 'f4': 1}
+host: 4ef314225763:27017
+ops: 0
+since: 2024-06-16 14:25:56.935000
+shard: rs-shard-01
+spec: {'v': 2, 'key': {'f1': 1, 'f2': -1, 'f3': 1, 'f4': 1}, 'name': 'idx_01'}
+
+Total number of results returned: 42
 
 ```
 
