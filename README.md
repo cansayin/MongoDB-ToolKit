@@ -321,7 +321,7 @@ python3 bt-mongodb-query-profiler --log_level debug --limit 2 --database testdb 
 
 ## bt-mongodb-sharded-size-printer & bt-mongodb-replciated-size-printer
 
-This script allows you to check total Disk and Document sizes on both Sharded & Replicated clusters.
+This script allows you to check total Disk, Document, Storage and Index sizes on both Sharded & Replicated clusters.
 
 ### Usage
 ```
