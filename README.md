@@ -257,7 +257,7 @@ Killed operation rs-shard-01:172864
 ...
 ...
 
-Total number of killed operations: 6
+Total number of killed operations: 13
 
 ```
 ```
